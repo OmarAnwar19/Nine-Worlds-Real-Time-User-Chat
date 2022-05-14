@@ -1,0 +1,7 @@
+{
+  "name": "Chat App with User Authentication",
+  "description": "A fully functional chat app, which allows users to chat using rooms, and includes authentication (registration and log in)",
+  "repository": "https://github.com/OmarAnwar19/Chat-App-With-User-Authentication",
+  "logo": "",
+  "keywords": ["nodejs", "htmlcss", "javascript", "express", "websockets"]
+}
