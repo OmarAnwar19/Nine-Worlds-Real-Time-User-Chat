@@ -1,5 +1,5 @@
 # Chat App with User Authentication
-An app built out of a friend's request for an inspirational quote generator. Does just that, by utilizing API's, and a databse of over 40,000+ quotes, by some of the most influential and famous people in history, this app aims to motivate all those who use it.
+A full stack chat app, which connects users using web sockets, and allows them to join different chat rooms, for real time communication with others. Rooms can be joined from a drop-down list, or by using a code. Additionally, a fully functionally login and authentication system is included, allowing users to sign up for an account, and log in, with full encrypting, and MongoDB integration. Used technologies include HTML, CSS, NodeJS, ExpressJS, Web-sockets, Passport, and more.
 
 Live Demo:
-https://quogen.herokuapp.com/
+https://chatappwauth.herokuapp.com/
