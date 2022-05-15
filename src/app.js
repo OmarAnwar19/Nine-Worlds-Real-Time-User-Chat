@@ -10,11 +10,15 @@ const socketio = require("socket.io");
 const app = express();
 const db = require("./config/keys").MongoURI;
 
+//NOTE: have to import http directly because socket.io needs direct access to it
+//this is contrary to normal conventions, which is just using express app/router
+
 //models
 const User = require("./models/User");
 
 //message formatting
 const formatMessage = require("./utils/messages");
+//import our user functions
 const {
   userJoin,
   getCurrentUser,
@@ -83,19 +87,20 @@ app.use("/users", require("./routes/users"));
 //set our static folder for our html
 app.use(express.static(path.join(__dirname, "public")));
 
+//variable for our bot name
 const botName = "Hermod";
 
 //run this as soon as a client connects
 io.on("connection", (socket) => {
-  //console.log("New web-socket connection");
-
   //listen for a user to join a room
   socket.on("joinRoom", ({ username, room }) => {
+    //first, create a user object using our userJoin function
     const user = userJoin(socket.id, username, room);
+    //then, join the socket with the room coming from the usr
     socket.join(user.room);
 
-    //WELCOME THE CURENT USER
-    //we can use socket.emit or receive, to send and recieve messages across our websocket $#$
+    //send a message event, with content of "welcome to chatcord"
+    //sends to all users
     socket.emit(
       "message",
       formatMessage(botName, "Welcome to Nine Worlds Chat")
@@ -112,11 +117,12 @@ io.on("connection", (socket) => {
       .to(user.room)
       .emit(
         "message",
-        formatMessage(botName, `${user.username} has joined the chat`)
+        formatMessage(botName, `${user.username} has joined the chat.`)
       );
 
-    //SEND USERS AND ROOM INFO
+    //send the user and room info to the front end
     io.to(user.room).emit("roomusers", {
+      //send an object with the room, and room users (using our function in users.js)
       room: user.room,
       users: getRoomUsers(user.room),
     });
@@ -124,7 +130,9 @@ io.on("connection", (socket) => {
 
   //LISTEN FOR chatMessage
   socket.on("chatMessage", (msg) => {
+    //get the current user, passing in the socket.id
     const user = getCurrentUser(socket.id);
+    //output the chat message
     io.to(user.room).emit("message", formatMessage(user.username, msg));
   });
 
@@ -132,16 +140,17 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const user = userLeave(socket.id);
 
-    //if the user has left correctly
+    //if the user leave = true
     if (user) {
       //output a message to the chat room that the user left
       io.to(user.room).emit(
         "message",
-        formatMessage(botName, `${user.username} has left the chat`)
+        formatMessage(botName, `${user.username} has left the chat.`)
       );
 
-      //SEND USERS AND ROOM INFO
+      //send the user and room info to the front end
       io.to(user.room).emit("roomusers", {
+        //send an object with the room, and room users (using our function in users.js)
         room: user.room,
         users: getRoomUsers(user.room),
       });
