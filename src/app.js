@@ -1,13 +1,20 @@
+//node imports
 const mongoose = require("mongoose");
 const path = require("path");
 const express = require("express");
+//allows us to create layouts for ejs views
 const expressLayouts = require("express-ejs-layouts");
+//allows us to use flash messages
 const flash = require("connect-flash");
 const session = require("express-session");
 const passport = require("passport");
+
+//node imports for chat
 const http = require("http");
 const socketio = require("socket.io");
 const app = express();
+
+//get our mongo uri from keys
 const db = require("./config/keys").MongoURI;
 
 //NOTE: have to import http directly because socket.io needs direct access to it
@@ -16,7 +23,7 @@ const db = require("./config/keys").MongoURI;
 //models
 const User = require("./models/User");
 
-//message formatting
+//import our message format function
 const formatMessage = require("./utils/messages");
 //import our user functions
 const {
@@ -33,24 +40,26 @@ const {
 const server = http.createServer(app);
 const io = socketio(server);
 
-//require our passport config file
+//require our passport config file, so we can auth users, passing in passport above
 require("./config/passport")(passport);
 
 //MONGOOSE AND MONGODB SETUP
+//connect to mongo db
 mongoose
   .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((res) => console.log("Connected to MongoDB..."))
   .catch((err) => console.log(err));
 
+//MIDDLEWARE:
 //EJS MIDDLWARE
 app.use(expressLayouts);
+//set our views path for ejs
 app.set("views", path.join(__dirname, "/views"));
+//set our view engine (templating) to ejs
 app.set("view engine", "ejs");
-
-//BODYPARSER MIDDLEWARE
+//bodyparser middleware, so we can deal with any incoming request body
 app.use(express.urlencoded({ extended: false }));
-
-//EXPRESS SESSION MIDDLEWARE
+//middleware for express session
 app.use(
   session({
     secret: "Lj*4PKHU6im7utCBKD{-k-hXz[8Z#(WE=gD4{P*5wA",
@@ -63,20 +72,30 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-//CONNECT FLASH MIDDLEWARE
+//middleware for connect flash
 app.use(flash());
 
-//custom middleware for:
-//GLOBAL VARIABLES (so we can make different coloured error and success messages)
+//we can either flash messages whenever we want them
+//or, we can create some global messages, which we can use more than once
+//for this, we make some middleware, which has all of these global messages
 app.use((req, res, next) => {
+  //we can save them using res.locals.VAR = value
+  //save one for sucess_msg and error_msg
   res.locals.success_msg = req.flash("success_msg");
   res.locals.error_msg = req.flash("error_msg");
   res.locals.error = req.flash("error");
+
+  //lastly, any middleware needs to end with next()
   next();
 });
 
-//ROUTES
+//set a static folder so we can load all of our static html, css, js
+app.use(express.static(path.join(__dirname, "public")));
+
+//ROUTERS
+//route 1, whenever a user accesses "/", we use the router in index
 app.use("/", require("./routes/index"));
+//route 2, whenever a user acesses /users, we use the router in users
 app.use("/users", require("./routes/users"));
 
 //So, what does socket.io do? It is an open, bydirectional communication channel
@@ -84,23 +103,19 @@ app.use("/users", require("./routes/users"));
 //run it each time, or close it. It's like an open door between a client and a server, and allows
 //either party to emit messages or signals back and forth
 
-//set our static folder for our html
-app.use(express.static(path.join(__dirname, "public")));
-
 //variable for our bot name
 const botName = "Hermod";
 
 //run this as soon as a client connects
 io.on("connection", (socket) => {
-  //listen for a user to join a room
+  //when the server recieves a joinRoom event, i.e a user just joined
   socket.on("joinRoom", ({ username, room }) => {
     //first, create a user object using our userJoin function
     const user = userJoin(socket.id, username, room);
-    //then, join the socket with the room coming from the usr
+    //then, join the socket with the room coming from the user
     socket.join(user.room);
 
-    //send a message event, with content of "welcome to chatcord"
-    //sends to all users
+    //send a message event, welcoming users to chat
     socket.emit(
       "message",
       formatMessage(botName, "Welcome to Nine Worlds Chat")
@@ -109,16 +124,15 @@ io.on("connection", (socket) => {
     //BRODCAST WHEN A NEW USER CONNECTS TO THE CHAT
 
     //socket.emit sends the message to only a specific user
-    //socket.brodcast.emit sends the message to all users except the new one
+    //socket.brodcast.emit sends the message to all users except the one that just connected
     //io.emit() sends a messge to all users, including the new one
 
     //we can add .to(where) to emit to a certain location
-    socket.broadcast
-      .to(user.room)
-      .emit(
-        "message",
-        formatMessage(botName, `${user.username} has joined the chat.`)
-      );
+    socket.broadcast.to(user.room).emit(
+      //brodcast the user that just joined the chat
+      "message",
+      formatMessage(botName, `${user.username} has joined the chat.`)
+    );
 
     //send the user and room info to the front end
     io.to(user.room).emit("roomusers", {
@@ -128,21 +142,23 @@ io.on("connection", (socket) => {
     });
   });
 
-  //LISTEN FOR chatMessage
+  //listen for chatMessage event
   socket.on("chatMessage", (msg) => {
     //get the current user, passing in the socket.id
     const user = getCurrentUser(socket.id);
-    //output the chat message
+    //output the chat message, formatted using our function
     io.to(user.room).emit("message", formatMessage(user.username, msg));
   });
 
-  //BRODCAST WHEN A USER LEAVS THE CHAT
+  //brodcast message on user leave
+  //brocasts a message to all users except the one that just left
   socket.on("disconnect", () => {
+    //first, get the user using our userLeave function
     const user = userLeave(socket.id);
 
-    //if the user leave = true
+    //if the user is found
     if (user) {
-      //output a message to the chat room that the user left
+      //emit the leave event and message
       io.to(user.room).emit(
         "message",
         formatMessage(botName, `${user.username} has left the chat.`)

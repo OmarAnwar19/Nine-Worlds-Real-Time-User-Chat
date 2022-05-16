@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-//our user schema, for saving our users to db
+//a schema is kind of like a blueprint of how new objects in the db are to be created
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-const User = mongoose.model("User", UserSchema);
+//then, we have to make an object, which takes in n parameters
+//the first 3 are "single_name", schema, "plural_name"
+const User = mongoose.model("User", UserSchema, "users");
 
 module.exports = User;

@@ -1,7 +1,9 @@
+//import the moment module to get a "moment in time"
 const moment = require("moment");
 
-//this function just formats a message, to it looks good in chat
+//function to format a message, takes the username and text
 function formatMessage(username, text) {
+  //return an object with username, message, and time as a moment
   return {
     username,
     text,
@@ -9,4 +11,5 @@ function formatMessage(username, text) {
   };
 }
 
+//export the formatter
 module.exports = formatMessage;

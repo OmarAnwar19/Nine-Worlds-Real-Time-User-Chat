@@ -1,0 +1,44 @@
+<!-- NOTE: all of the messages are dismissable bootstrap alerts-->
+
+<!-- if there are any errors in the locals (vars we passed in) -->
+<!-- loop over each error -->
+<% if(locals.errors){ %> <% errors.forEach(function(error) { %>
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <!-- output the error message -->
+  <%= error.msg %>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<!-- if the sucess message is actually defined (!= empty string) -->
+<!-- then output sucess div -->
+<% }); %> <% } %> <% if(success_msg != ''){ %>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  <%= success_msg %>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<% } %>
+
+<!-- if the error message is actually defined (!= empty string) -->
+<!-- then output error div -->
+<% if(error_msg != ''){ %>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <%= error_msg %>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<!-- if the error is actually defined (!= empty string) (for login auth)-->
+<!-- then output 2nd error div -->
+<% } %> <% if(error != ''){ %>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <%= error %>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<% } %>

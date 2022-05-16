@@ -61,7 +61,7 @@ function outputMessage(message) {
   //add the message to the html of the new element
   //outputs the username, time and text from the message object
   div.innerHTML = `
-  <p class="meta">${message.username}<span> ${message.time}</span></p>
+  <p class="meta">${message.username}<span> ${message.time} </span></p>
     <p class="text">
       ${message.text}
     </p>`;

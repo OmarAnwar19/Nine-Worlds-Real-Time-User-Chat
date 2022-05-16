@@ -1,8 +1,11 @@
-//to make sure we are logged in
+//this file acts as an auth guard, which allows us to check if a user
+//is authenticated before letting them acess the rest of the website
+
+//our function takes in req, res, and next to move on
 module.exports = {
-  //check the user is authenticated
+  //if the user request has isAuthenticated in it (provided by passport)
   ensureAuthenticated: function (req, res, next) {
-    //if so, then just call next, no errors
+    //if so, then just call next, no errors, let them access the app
     if (req.isAuthenticated()) {
       return next();
     }
@@ -11,3 +14,6 @@ module.exports = {
     res.redirect("/users/login");
   },
 };
+
+//by exporting this method, we can then use it as middleware on any
+//route, and it will verify user authentication before allowing access

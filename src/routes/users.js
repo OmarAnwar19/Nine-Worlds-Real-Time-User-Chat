@@ -1,21 +1,29 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
-const User = require("../models/User");
 const passport = require("passport");
 
-//LOGIN PAGE, render login view
+//importing our user schema so we can creat new users and add them to db
+const User = require("../models/User");
+
+//router for users/login, render the login ejs view
 router.get("/login", (req, res) => res.render("login"));
 
-//REGISTER PAGE, render register view
+//router for users/register, render the register ejs view
 router.get("/register", (req, res) => res.render("register"));
 
-//REGISTER HANDLE
+//post request for user register handler
 router.post("/register", (req, res) => {
-  //breaking down the form submitted for register, into different variables
+  //we can destructure our request, to put all of the inputs into variables
   const { name, email, password, password2 } = req.body;
+
+  //this errors array will be added to each time that an error occurs,
+  //at the end, we will check if its empty, if so, then validation successful
   let errors = [];
-  //CHECK REQUIRED FIELDS
+
+  //check required fields are filled in
+  //can also make fields required in html, but in normal registerations,
+  //they ususally do it like this
   if (!name || !email || !password || !password2) {
     errors.push({ msg: "Please fill in empty fields." });
   }
@@ -25,33 +33,37 @@ router.post("/register", (req, res) => {
     errors.push({ msg: "Passwords do not match." });
   }
 
-  //CHECK THE PASSWORD LENGTH
+  //check that the password length is 8+ characters
   if (password.length < 8) {
     errors.push({ msg: "Password should be at least 8 characters" });
   }
 
   //if our errors array is any longer than 0 (there are any errors)
   if (errors.length > 0) {
-    //keep the values that we had, and reneder them out, but ask for user to retry
+    //keep the values that we had, and re-render them out, but ask for user to retry
     res.render("register", {
+      //first, pass in our errors array
       errors,
+      //next, pass in all of our variables, so they arent cleared on form submit
+      //if we make the default value of the form these variables, they will be
+      //saved on reload
       name,
       email,
       password,
       password2,
     });
-    //if no errors
+    //otherwise, if there are no errors, validation passed, so add user
   } else {
     //IF THE VALIDATION PASSES
-    //first, we have to make sure the user does not already exist
+    //first, search for a user with the same email in the databse, we have to make sure it doesnt exist
     User.findOne({ email: email })
       //returns a promise, with the user object
       .then((user) => {
-        //if the user exists
+        //if a user is found, then they can not register with that email
         if (user) {
           //add a new error to our errors array
           errors.push({ msg: "Email is already registered" });
-          //re-render the register page with the new error
+          //re-render the register page, with the user inputs saved, and the new error rendered
           res.render("register", {
             errors,
             name,
@@ -59,9 +71,10 @@ router.post("/register", (req, res) => {
             password,
             password2,
           });
-          //otherwise, if the user doesn't exist
+          //otherwise, if no user was found, we have to create one
         } else {
           //use our user schema to create a new user, passing in all of the values they entered in the form
+          //this is not saved to the db quite yet
           const newUser = new User({
             name,
             email,
@@ -69,21 +82,24 @@ router.post("/register", (req, res) => {
           });
 
           //to keep our password safe, we have to hash it
-          //HASHING OUR PASSWORD
-
-          //we hash a password by generating a salt
+          //we cant save a password to db unhashed, so hash the password
+          //first, generate a salt to hash the passowrd
           bcrypt.genSalt(10, (err, salt) => {
+            //gen salt returns a salt, then, we have to hash, which takes in:
+            //password and salt, and returns a callback function with err and hashed pass
             bcrypt.hash(newUser.password, salt, (err, hash) => {
+              //if there was an error, then throw the error
               if (err) throw err;
 
-              //then, we can set the user's password to the hashed value, to secure it
+              //otherwise, if there is no error, set the user password as the hash returned
               newUser.password = hash;
 
-              //THEN, WE SAVE THE USER TO THE DATABSE
+              //lastly, save the newUser object to the databse
               newUser
                 .save()
-                //then, we can flash a success message
+                //this returns a user object
                 .then((user) => {
+                  //first, flash a sucess message
                   req.flash(
                     "success_msg",
                     "You are now registered and can log in!"
@@ -104,23 +120,30 @@ router.post("/register", (req, res) => {
   }
 });
 
-//LOGIN POST REQUEST HANDLING
+//handle post requests to login (users submitting the login form)
 router.post("/login", (req, res, next) => {
-  //authenticate the user using passport
+  //authenticate the user using passport with the local strategy
   passport.authenticate("local", {
-    //setting up redirects on success or failure
+    //we have to pass in parameters for redirects on success or failure
+    //on success, redirect to chat
     successRedirect: "/chat",
+    //on failure, redirect to login page again
     failureRedirect: "/users/login",
+    //we can also choose to flash a message on fail authenticate, which we will
     failureFlash: true,
+    //lastly, this is required per the docs
   })(req, res, next);
 });
 
-//LOGOUT HANDLE (SO OUR LOGOUT BUTTON WORKS)
+//whenever a logout get request is recieved
 router.get("/logout", (req, res) => {
-  //log out the user, then flash a message and redirect
+  //log the user out using the passport middleware
   req.logout();
+  //send a flash message to inform user that they have been logged out
   req.flash("success_msg", "You have been logged out");
+  //redirect the user to the login page
   res.redirect("/users/login");
 });
 
+//export the router so we can use it for routing in app.js
 module.exports = router;

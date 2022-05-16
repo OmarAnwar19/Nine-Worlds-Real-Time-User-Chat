@@ -1,24 +1,35 @@
+<!--
+    our layout.ejs file works as a template which insers other ejs files into itself
+    we use whatever other ejs file, and that goes into our body tag, while being wrapped
+    with everything else we include in this layout file
+
+    ==> this allows us to have dynamically loading views based on routes
+-->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- fontawesome cdn -->
     <link
       rel="stylesheet"
       href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
       integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
       crossorigin="anonymous"
     />
+    <!-- bootswatch cdn -->
     <link
       rel="stylesheet"
       href="https://bootswatch.com/4/slate/bootstrap.min.css"
     />
-    <title>Node.js & Passport Login App</title>
+    <title>Nine Worlds Chat</title>
   </head>
   <body>
     <div class="container"><%- body %></div>
 
+    <!-- bootstrap js cdn -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
