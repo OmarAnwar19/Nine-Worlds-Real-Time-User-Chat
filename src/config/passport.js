@@ -23,7 +23,7 @@ const fnPassport = (passport) => {
           if (!user) {
             //return the done object, error=null, user=false, msg=error_msg
             return done(null, false, {
-              message: "That email is not registered.",
+              message: "Email is not registered.",
             });
           }
 

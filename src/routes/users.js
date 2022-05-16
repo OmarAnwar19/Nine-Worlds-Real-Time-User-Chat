@@ -126,7 +126,7 @@ router.post("/login", (req, res, next) => {
   passport.authenticate("local", {
     //we have to pass in parameters for redirects on success or failure
     //on success, redirect to chat
-    successRedirect: "/chat",
+    successRedirect: "/chat/dashboard",
     //on failure, redirect to login page again
     failureRedirect: "/users/login",
     //we can also choose to flash a message on fail authenticate, which we will
